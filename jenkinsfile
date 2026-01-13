@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+
+    tools {
+        nodejs 'node18'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                url: 'https://github.com/raviteja-del/jennn.git'
+            }
+        }
+
+        stage('Frontend Build') {
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Backend Build') {
+            steps {
+                dir('backend') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t fullstack-app .'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                docker stop app || true
+                docker rm app || true
+                docker run -d -p 80:3000 --name app fullstack-app
+                '''
+            }
+        }
+    }
+}
